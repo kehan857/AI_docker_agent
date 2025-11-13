@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AI医生智能体 - 小程序Demo</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- 小程序顶部导航栏 -->
+    <div class="navbar">
+        <div class="navbar-left">
+            <div class="navbar-back" onclick="goBack()">‹</div>
+        </div>
+        <div class="navbar-title">AI医生智能体</div>
+        <div class="navbar-right">
+            <div class="navbar-more">⋯</div>
+        </div>
+    </div>
+
+    <!-- 主容器 -->
+    <div class="container">
+        <!-- 用户信息配置面板 -->
+        <div id="configPanel" class="config-panel">
+            <div class="config-card">
+                <h3>用户信息配置</h3>
+                <div class="form-group">
+                    <label>用户ID:</label>
+                    <input type="text" id="userId" value="user_001" placeholder="请输入用户ID">
+                </div>
+                <div class="form-group">
+                    <label>用户类型:</label>
+                    <select id="userType">
+                        <option value="new">新用户</option>
+                        <option value="old">老用户</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>是否会员:</label>
+                    <select id="isMember">
+                        <option value="false">非会员</option>
+                        <option value="true">会员</option>
+                    </select>
+                </div>
+                <button class="btn-primary" onclick="startFlow()">开始流程</button>
+            </div>
+        </div>
+
+        <!-- 聊天界面 -->
+        <div id="chatPanel" class="chat-panel" style="display: none;">
+            <!-- 消息列表 -->
+            <div class="messages" id="messages">
+                <!-- 初始欢迎消息 -->
+                <div id="welcomeMessage" class="welcome-section">
+                    <div class="bot-avatar">
+                        <div class="bot-head">
+                            <div class="bot-light"></div>
+                            <div class="bot-eyes">
+                                <div class="eye"></div>
+                                <div class="eye"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="welcome-bubble">
+                        <p>你好! 小康专业在线守候, 随时准备解答您的健康问题! 点击左下角更多功能, 还有其他有趣的等着你。</p>
+                    </div>
+                </div>
+                
+                <!-- 猜你想问 -->
+                <div id="suggestedQuestions" class="suggested-questions">
+                    <div class="suggested-title">猜你想问</div>
+                    <div class="suggested-list">
+                        <div class="suggested-item" onclick="handleSuggestedQuestion('你是谁? 你能做什么?')">
+                            "你是谁? 你能做什么?"
+                        </div>
+                        <div class="suggested-item" onclick="handleSuggestedQuestion('我血糖有点高, 该如何控制?')">
+                            "我血糖有点高, 该如何控制?"
+                        </div>
+                        <div class="suggested-item" onclick="handleSuggestedQuestion('关于改善睡眠, 你有什么建议?')">
+                            "关于改善睡眠, 你有什么建议?"
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 底部快捷按钮 -->
+            <div class="bottom-actions" id="bottomActions">
+                <div class="action-btn" onclick="handleAction('health_manager')">
+                    <div class="action-icon">🛡️</div>
+                    <div class="action-text">健康管家</div>
+                </div>
+                <div class="action-btn" onclick="handleAction('online_service')">
+                    <div class="action-icon">🎧</div>
+                    <div class="action-text">在线客服</div>
+                </div>
+                <div class="action-btn" onclick="handleAction('phone_service')">
+                    <div class="action-icon">📞</div>
+                    <div class="action-text">电话客服</div>
+                </div>
+            </div>
+
+            <!-- 输入区域 - 初始化时显示 -->
+            <div class="input-area" id="inputArea">
+                <div class="input-container">
+                    <button class="btn-more" onclick="showMoreFunctions()" title="更多功能">
+                        <div class="more-icon">☰</div>
+                        <span class="more-text">更多功能</span>
+                    </button>
+                    <div class="input-wrapper">
+                        <input type="text" id="userInput" placeholder="请输入您的问题..." onkeypress="handleKeyPress(event)">
+                        <button class="btn-voice" onclick="startVoiceInput()" title="语音输入">
+                            🎤
+                        </button>
+                    </div>
+                    <button class="btn-send" onclick="sendMessage()">发送</button>
+                </div>
+                <div class="disclaimer">内容为AI生成仅供参考</div>
+            </div>
+
+            <!-- 等待状态 -->
+            <div class="waiting" id="waiting" style="display: none;">
+                <div class="loading-dots">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+                <div class="waiting-text">AI正在思考中...</div>
+            </div>
+        </div>
+
+        <!-- 流程状态面板 -->
+        <div id="statusPanel" class="status-panel">
+            <div class="status-card">
+                <h4>流程状态</h4>
+                <div id="statusInfo" class="status-info">
+                    <div class="status-item">
+                        <span class="status-label">当前节点:</span>
+                        <span class="status-value" id="currentNode">-</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">用户类型:</span>
+                        <span class="status-value" id="userTypeStatus">-</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">会员状态:</span>
+                        <span class="status-value" id="memberStatus">-</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
+
